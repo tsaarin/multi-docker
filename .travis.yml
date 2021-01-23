@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tsaarinen2/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true tsaarinen2/react-test npm test
+
+after_success:
+  - docker build -t tsaarinen2/multi-client ./client
+  - docker build -t tsaarinen2/multi-nginx ./nginx
+  - docker build -t tsaarinen2/multi-server ./server
+  - docker build -t tsaarinen2/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push tsaarinen2/multi-client
+  - docker push tsaarinen2/multi-nginx
+  - docker push tsaarinen2/multi-server
+  - docker push tsaarinen2/multi-worker
